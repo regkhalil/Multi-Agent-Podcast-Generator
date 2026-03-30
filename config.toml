@@ -2,3 +2,7 @@
 model = "smollm2"
 base_url = "http://localhost:11434"
 temperature = 0.7
+
+[tts]
+voice_ali = "en-US-GuyNeural"
+voice_amir = "en-US-AndrewNeural"

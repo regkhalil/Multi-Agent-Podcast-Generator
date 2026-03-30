@@ -149,7 +149,7 @@ tech_task = Task(
     context=[expansion_task],
     async_execution=True,
 )
-
+    
 future_task = Task(
     description=(
         "Using the master research directive provided, research future trends, "
@@ -196,9 +196,18 @@ def generate_podcast_script(topic: str, duration_minutes: int = 5) -> str:
 
     # result.pydantic holds the validated PodcastScript model
     if result.pydantic:
-        return result.pydantic.model_dump_json(indent=2)
-    # Fallback: return raw string output
-    return str(result)
+        script_json = result.pydantic.model_dump_json(indent=2)
+    else:
+        script_json = str(result)
+
+    # Save to output/script.json for the audio pipeline
+    output_dir = Path(__file__).parent / "output"
+    output_dir.mkdir(exist_ok=True)
+    script_path = output_dir / "script.json"
+    script_path.write_text(script_json)
+    logger.info("Script saved to %s", script_path)
+
+    return script_json
 
 
 if __name__ == "__main__":
