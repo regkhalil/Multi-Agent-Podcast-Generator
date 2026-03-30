@@ -1,0 +1,4 @@
+[ollama]
+model = "smollm2"
+base_url = "http://localhost:11434"
+temperature = 0.7
