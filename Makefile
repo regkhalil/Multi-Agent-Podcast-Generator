@@ -1,4 +1,4 @@
-.PHONY: setup run audio all run-gemini
+.PHONY: setup run audio all app run-gemini
 
 PROVIDER := $(shell python3 -c "import tomllib; print(tomllib.load(open('config.toml','rb')).get('llm',{}).get('provider','ollama'))" 2>/dev/null || echo ollama)
 MODEL := $(shell python3 -c "import tomllib; print(tomllib.load(open('config.toml','rb'))['ollama']['model'])" 2>/dev/null || echo llama3)
@@ -28,5 +28,8 @@ audio:
 		exit 1; \
 	fi; \
 	uv run python audio_pipeline.py "$$LATEST_SCRIPT"
+
+app: setup
+	uv run streamlit run app.py
 
 all: run audio
