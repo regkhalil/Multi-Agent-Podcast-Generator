@@ -13,8 +13,8 @@ temperature = 0.7
 # API key is read from GEMINI_API_KEY environment variable (set in .env)
 
 [rag]
-enabled = false
-knowledge_dir = "knowledge"
+enabled = true
+knowledge_dir = "/knowledge/"
 chunk_size = 1000
 chunk_overlap = 200
 embedding_provider = "gemini"   # "gemini" or "ollama" (defaults to [llm].provider)
