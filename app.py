@@ -89,6 +89,7 @@ def init_session_state() -> None:
         "audio_path": None,
         "logs": [],
         "error": None,
+        "topic": "",
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -103,6 +104,7 @@ def reset_state() -> None:
     st.session_state.audio_path = None
     st.session_state.logs = []
     st.session_state.error = None
+    st.session_state.topic = ""
 
 
 def detect_active_step() -> int:
@@ -264,7 +266,7 @@ def main() -> None:
         st.subheader("Output")
 
         if st.session_state.generation_complete:
-            render_results(topic)
+            render_results(st.session_state.topic or topic)
         elif st.session_state.generation_started:
             st.info("Generation in progress...")
         else:
@@ -273,6 +275,7 @@ def main() -> None:
     # Trigger generation
     if generate_btn and topic:
         st.session_state.generation_started = True
+        st.session_state.topic = topic
         st.session_state.logs = []
 
         log_queue = queue.Queue()
