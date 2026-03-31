@@ -1,0 +1,237 @@
+\documentclass[aspectratio=169, 11pt]{beamer}
+
+% ── Theme ────────────────────────────────────────────────────────────────────
+\usetheme{default}
+\usecolortheme{default}
+
+\definecolor{accent}{HTML}{C8102E}
+\definecolor{bglight}{HTML}{FAF0F0}
+\definecolor{dark}{HTML}{2D2D2D}
+\definecolor{arrowclr}{HTML}{8B8B8B}
+
+\setbeamercolor{structure}{fg=accent}
+\setbeamercolor{frametitle}{bg=accent, fg=white}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{subtitle}{fg=white!85!accent}
+\setbeamercolor{normal text}{fg=dark}
+\setbeamercolor{item}{fg=accent}
+\setbeamercolor{block title}{bg=accent, fg=white}
+\setbeamercolor{block body}{bg=bglight}
+
+\setbeamerfont{frametitle}{size=\Large, series=\bfseries}
+\setbeamerfont{title}{size=\huge, series=\bfseries}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{}
+
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, fit, backgrounds, calc, shapes.geometric}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{colortbl}
+\usepackage{hyperref}
+
+% ── TikZ styles (preamble so #1 works without beamer doubling) ───────────
+\tikzset{
+  box/.style={
+    draw=dark!50, fill=bglight, rounded corners=3pt,
+    minimum height=0.65cm, text width=#1, align=center,
+    font=\scriptsize\sffamily,
+    inner sep=3pt,
+  },
+  box/.default=2.8cm,
+  lbl/.style={font=\tiny\itshape, text=accent},
+  arr/.style={-{Stealth[length=4pt]}, thick, arrowclr},
+}
+
+% ═════════════════════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── SLIDE 1 — Title ─────────────────────────────────────────────────────────
+{
+\setbeamercolor{background canvas}{bg=accent}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+  {\usebeamerfont{title}\textcolor{white}{Multi-Agent Podcast Generator}}\\[0.6cm]
+  {\large\textcolor{white!90!accent}{D'un simple sujet à un épisode de podcast complet — propulsé par des agents IA}}
+\end{center}
+\vfill
+\end{frame}
+}
+
+% ── SLIDE 2 — Problem Statement ─────────────────────────────────────────────
+\begin{frame}{La Problématique}
+\vspace{0.2cm}
+{\color{accent}\bfseries Produire un épisode de podcast de qualité est lent, coûteux et pluridisciplinaire.}
+
+\vspace{0.3cm}
+\begin{columns}[T]
+  \begin{column}{0.47\textwidth}
+    \textbf{Difficultés manuelles}
+    \begin{itemize}
+      \item Recherche approfondie sous plusieurs angles
+      \item Rédaction d'un script engageant et naturel
+      \item Enregistrement, montage et assemblage audio
+      \item Des semaines de travail par épisode
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.47\textwidth}
+    \textbf{Notre objectif}
+    \begin{itemize}
+      \item Pipeline entièrement automatisé de bout en bout
+      \item Un sujet en entrée $\rightarrow$ podcast fini en sortie
+      \item Collaboration multi-agents pour la qualité
+      \item Audio text-to-speech réaliste
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% ── SLIDE 3 — Tools & Technologies ──────────────────────────────────────────
+\begin{frame}{Outils \& Technologies}
+\vspace{0.1cm}
+\small
+\begin{columns}[T]
+  \begin{column}{0.47\textwidth}
+    \textbf{Orchestration \& IA}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item \textbf{CrewAI} — framework multi-agents
+      \item \textbf{Google Gemini 2.5 Flash} — LLM
+      \item \textbf{Ollama} — alternative locale
+    \end{itemize}
+    \vspace{0.15cm}
+    \textbf{Recherche \& RAG}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item \textbf{ChromaDB} — base vectorielle
+      \item \textbf{LangChain Splitters} — découpage
+      \item \textbf{Tavily} — recherche web (optionnel)
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.47\textwidth}
+    \textbf{Pipeline Audio}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item \textbf{Edge TTS} — voix neuronales Microsoft
+      \item \textbf{Pydub + FFmpeg} — assemblage audio
+    \end{itemize}
+    \vspace{0.15cm}
+    \textbf{Frontend \& DevOps}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item \textbf{Streamlit} — interface web interactive
+      \item \textbf{Docker} — déploiement conteneurisé
+      \item \textbf{GitHub Actions} — CI/CD
+      \item \textbf{Hugging Face Spaces} — hébergement
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% ── SLIDE 4 — Architecture (PNG image) ───────────────────────────────────────
+\begin{frame}[plain]
+\begin{center}
+  \vfill
+  \includegraphics[height=0.92\textheight]{architecture.png}
+  \vfill
+\end{center}
+\end{frame}
+
+% ── SLIDE 5 — The Agents ────────────────────────────────────────────────────
+\begin{frame}{Les Agents}
+\vspace{0.1cm}
+\centering
+\footnotesize
+\begin{tabularx}{0.95\textwidth}{l X}
+  \toprule
+  \textbf{Agent} & \textbf{Rôle \& Focus} \\
+  \midrule
+  \rowcolor{bglight} Expanseur & Transforme un sujet brut en un brief de recherche structuré avec des questions spécifiques pour chaque expert. \\
+  Historien & Recherche les origines, jalons et figures fondatrices. Utilise le RAG si disponible. \\
+  \rowcolor{bglight} Technologue & Décompose les mécanismes techniques, spécifications et principes scientifiques. Utilise le RAG si disponible. \\
+  Futuriste & Explore les tendances futures, développements à venir et impact culturel. Utilise le RAG si disponible. \\
+  \rowcolor{bglight} Critique & Évalue chaque contribution de recherche sur la pertinence, profondeur et précision. Attribue des pondérations. \\
+  Scénariste & Synthétise toute la recherche en un dialogue de podcast naturel entre Ali (animateur) et Amir (expert invité). \\
+  \bottomrule
+\end{tabularx}
+\end{frame}
+
+% ── SLIDE 6 — Deployment & CI/CD ────────────────────────────────────────────
+\begin{frame}{Déploiement \& CI/CD}
+\vspace{0.1cm}
+\small
+\begin{columns}[T]
+  \begin{column}{0.47\textwidth}
+    \textbf{Hugging Face Spaces}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item Déploiement via Docker SDK
+      \item Application Streamlit sur le port 8501
+      \item \texttt{GEMINI\_API\_KEY} en secret du Space
+      \item \textbf{Bucket S3} monte \texttt{knowledge/} avec les documents RAG
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.47\textwidth}
+    \textbf{Pipeline CI/CD}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item GitHub Actions au push sur \texttt{main}
+      \item Synchronisation auto vers HF Spaces
+      \item Reconstruction du conteneur sans interruption
+      \item Secrets gérés via HF + GitHub
+    \end{itemize}
+  \end{column}
+\end{columns}
+
+\vspace{0.3cm}
+\begin{center}
+  \colorbox{bglight}{\small\texttt{git push origin main} \;$\rightarrow$\; GitHub Actions \;$\rightarrow$\; HF Spaces \;$\rightarrow$\; En ligne}
+\end{center}
+\end{frame}
+
+% ── SLIDE 7 — Strengths & Future Features ───────────────────────────────────
+\begin{frame}{Points Forts \& Évolutions Futures}
+\vspace{0.1cm}
+\small
+\begin{columns}[T]
+  \begin{column}{0.47\textwidth}
+    \textbf{Points forts}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item Pipeline entièrement automatisé de bout en bout
+      \item Agents de recherche parallèles pour la rapidité
+      \item Agent critique pour la pondération qualité
+      \item Double support LLM (cloud + local)
+      \item Recherche augmentée par RAG sur documents personnalisés
+      \item TTS neuronal réaliste avec voix distinctes
+      \item Déploiement en un clic via Docker
+    \end{itemize}
+  \end{column}
+  \begin{column}{0.47\textwidth}
+    \textbf{Évolutions futures}
+    \begin{itemize}\setlength{\itemsep}{2pt}
+      \item Support multilingue des podcasts
+      \item Clonage vocal pour des intervenants personnalisés
+      \item Intégration Q\&R en direct avec le public
+      \item Nouveaux agents (éthique, économie)
+      \item Génération de séries d'épisodes
+      \item Export de transcriptions \& notes d'émission
+      \item Documents uploadés par l'utilisateur via l'UI
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% ── SLIDE 8 — Conclusion ────────────────────────────────────────────────────
+{
+\setbeamercolor{background canvas}{bg=accent}
+\begin{frame}[plain]
+\vfill
+\begin{center}
+  {\Huge\bfseries\textcolor{white}{Merci !}}\\[0.8cm]
+  {\large\textcolor{white!90!accent}{L'orchestration multi-agents transforme un simple sujet\\en un podcast recherché, scénarisé et vocalisé — automatiquement.}}\\[1cm]
+  {\small\textcolor{white!80!accent}{%
+    \href{https://huggingface.co/spaces/regkhalil/multi-agent-podcast-generator}{Démo en ligne sur Hugging Face}%
+    \qquad\qquad%
+    \href{https://github.com/regkhalil/Multi-Agent-Podcast-Generator}{Dépôt GitHub}%
+  }}
+\end{center}
+\vfill
+\end{frame}
+}
+
+\end{document}

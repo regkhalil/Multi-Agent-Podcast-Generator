@@ -211,3 +211,6 @@ output/
 .env
 
 knowledge/
+
+*.pdf
+*.png
