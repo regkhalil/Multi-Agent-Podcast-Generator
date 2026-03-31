@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import tomllib
+from datetime import datetime
 from pathlib import Path
 
 from crewai import Agent, Crew, Process, Task, LLM
@@ -220,10 +221,11 @@ def generate_podcast_script(topic: str, duration_minutes: int = 5) -> str:
     else:
         script_json = str(result)
 
-    # Save to output/script.json for the audio pipeline
+    # Save timestamped script to output/
     output_dir = Path(__file__).parent / "output"
     output_dir.mkdir(exist_ok=True)
-    script_path = output_dir / "script.json"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    script_path = output_dir / f"script_{timestamp}.json"
     script_path.write_text(script_json)
     logger.info("Script saved to %s", script_path)
 

@@ -22,6 +22,11 @@ run-gemini:
 	uv run python orchestrator.py
 
 audio:
-	uv run python audio_pipeline.py output/script.json
+	@LATEST_SCRIPT=$$(ls -t output/script_*.json 2>/dev/null | head -1); \
+	if [ -z "$$LATEST_SCRIPT" ]; then \
+		echo "No script found in output/. Run 'make run' first."; \
+		exit 1; \
+	fi; \
+	uv run python audio_pipeline.py "$$LATEST_SCRIPT"
 
 all: run audio

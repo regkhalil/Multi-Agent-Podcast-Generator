@@ -88,6 +88,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     script_path = Path(sys.argv[1])
+    # Derive audio filename from script filename: script_20260331_120000.json -> podcast_20260331_120000.mp3
+    stem = script_path.stem
+    audio_name = stem.replace("script_", "podcast_", 1) + ".mp3" if stem.startswith("script_") else "podcast.mp3"
     script_json = script_path.read_text()
-    result = generate_audio_sync(script_json)
+    result = generate_audio_sync(script_json, audio_name)
     print(f"Audio saved to: {result}")
