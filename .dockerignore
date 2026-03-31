@@ -1,0 +1,9 @@
+.venv/
+.env
+.git/
+output/
+__pycache__/
+*.pyc
+docker-compose.yaml
+Makefile
+.gitignore
