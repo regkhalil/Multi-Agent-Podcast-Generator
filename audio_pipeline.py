@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import tomllib
+from datetime import datetime
 from pathlib import Path
 
 import edge_tts
@@ -32,8 +33,11 @@ async def _synthesize_line(text: str, voice: str, output_path: Path) -> None:
     await communicate.save(str(output_path))
 
 
-async def generate_audio(script_json: str, output_file: str = "podcast.mp3") -> Path:
+async def generate_audio(script_json: str, output_file: str | None = None) -> Path:
     """Convert a PodcastScript JSON string into a stitched MP3 file."""
+    if output_file is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_file = f"podcast_{timestamp}.mp3"
     script = json.loads(script_json, strict=False)
     lines = script["dialogue"]
 
@@ -78,7 +82,7 @@ async def generate_audio(script_json: str, output_file: str = "podcast.mp3") -> 
     return final_path
 
 
-def generate_audio_sync(script_json: str, output_file: str = "podcast.mp3") -> Path:
+def generate_audio_sync(script_json: str, output_file: str | None = None) -> Path:
     """Synchronous wrapper around generate_audio."""
     return asyncio.run(generate_audio(script_json, output_file))
 
