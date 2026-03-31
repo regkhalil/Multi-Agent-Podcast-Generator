@@ -1,12 +1,16 @@
 import json
 import logging
+import os
 import tomllib
 from pathlib import Path
 
 from crewai import Agent, Crew, Process, Task, LLM
+from dotenv import load_dotenv
 from pydantic import BaseModel
 
 # ── Config ───────────────────────────────────────────────────────────────────
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -30,14 +34,30 @@ class PodcastScript(BaseModel):
 
 # ── LLM ─────────────────────────────────────────────────────────────────────
 
-llm = LLM(
-    model=f"ollama/{config['ollama']['model']}",
-    base_url=config["ollama"]["base_url"],
-    temperature=config["ollama"]["temperature"],
-)
+_provider = config.get("llm", {}).get("provider", "ollama")
 
-logger.info("LLM initialized: model=%s, base_url=%s, temperature=%s",
-            config["ollama"]["model"], config["ollama"]["base_url"], config["ollama"]["temperature"])
+if _provider == "gemini":
+    _gemini_cfg = config["gemini"]
+    _api_key = os.environ.get("GEMINI_API_KEY")
+    if not _api_key:
+        raise RuntimeError("GEMINI_API_KEY environment variable is required when provider is 'gemini'. "
+                           "Set it in a .env file or export it in your shell.")
+    llm = LLM(
+        model=f"gemini/{_gemini_cfg['model']}",
+        api_key=_api_key,
+        temperature=_gemini_cfg["temperature"],
+    )
+    logger.info("LLM initialized: provider=gemini, model=%s, temperature=%s",
+                _gemini_cfg["model"], _gemini_cfg["temperature"])
+else:
+    _ollama_cfg = config["ollama"]
+    llm = LLM(
+        model=f"ollama/{_ollama_cfg['model']}",
+        base_url=_ollama_cfg["base_url"],
+        temperature=_ollama_cfg["temperature"],
+    )
+    logger.info("LLM initialized: provider=ollama, model=%s, base_url=%s, temperature=%s",
+                _ollama_cfg["model"], _ollama_cfg["base_url"], _ollama_cfg["temperature"])
 
 
 # ── Agents ───────────────────────────────────────────────────────────────────
@@ -107,7 +127,7 @@ scriptwriter = Agent(
 )
 
 for agent in [prompt_expander, historian, technologist, futurist, scriptwriter]:
-    logger.info("Agent '%s' using model: %s", agent.role, config["ollama"]["model"])
+    logger.info("Agent '%s' using provider: %s", agent.role, _provider)
 
 
 # ── Tasks ────────────────────────────────────────────────────────────────────

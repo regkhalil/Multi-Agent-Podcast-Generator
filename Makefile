@@ -1,5 +1,6 @@
-.PHONY: setup run audio all
+.PHONY: setup run audio all run-gemini
 
+PROVIDER := $(shell python3 -c "import tomllib; print(tomllib.load(open('config.toml','rb')).get('llm',{}).get('provider','ollama'))" 2>/dev/null || echo ollama)
 MODEL := $(shell python3 -c "import tomllib; print(tomllib.load(open('config.toml','rb'))['ollama']['model'])" 2>/dev/null || echo llama3)
 
 setup:
@@ -9,7 +10,15 @@ setup:
 	docker exec local_llm_server ollama pull $(MODEL)
 	@echo "Ready — $(MODEL) is available."
 
-run: setup
+run:
+ifeq ($(PROVIDER),gemini)
+	uv run python orchestrator.py
+else
+	$(MAKE) setup
+	uv run python orchestrator.py
+endif
+
+run-gemini:
 	uv run python orchestrator.py
 
 audio:
