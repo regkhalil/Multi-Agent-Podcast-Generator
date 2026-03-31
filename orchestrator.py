@@ -6,12 +6,10 @@ from datetime import datetime
 from pathlib import Path
 
 from crewai import Agent, Crew, Process, Task, LLM
-<<<<<<< Updated upstream
 from dotenv import load_dotenv
-=======
-from crewai.tools import MCPServerAdapter
->>>>>>> Stashed changes
 from pydantic import BaseModel
+
+from research_tools import get_research_tools
 
 # ── Config ───────────────────────────────────────────────────────────────────
 
@@ -67,11 +65,9 @@ else:
 
 # ── Feature flags ────────────────────────────────────────────────────────────
 
-_rag_enabled = config.get("rag", {}).get("enabled", False)
-_web_enabled = config.get("web_search", {}).get("enabled", False)
-_mcp_needed = _rag_enabled or _web_enabled
+_research_tools = get_research_tools()
 
-logger.info("Features: rag=%s, web_search=%s", _rag_enabled, _web_enabled)
+logger.info("Research tools loaded: %s", [t.name for t in _research_tools])
 
 
 # ── Agents ───────────────────────────────────────────────────────────────────
@@ -171,13 +167,8 @@ scriptwriter = Agent(
     verbose=True,
 )
 
-<<<<<<< Updated upstream
-for agent in [prompt_expander, historian, technologist, futurist, scriptwriter]:
-    logger.info("Agent '%s' using provider: %s", agent.role, _provider)
-=======
 for agent in [prompt_expander, historian, technologist, futurist, critic, scriptwriter]:
-    logger.info("Agent '%s' using model: %s", agent.role, config["ollama"]["model"])
->>>>>>> Stashed changes
+    logger.info("Agent '%s' using provider: %s", agent.role, _provider)
 
 
 # ── Tasks ────────────────────────────────────────────────────────────────────
@@ -301,26 +292,10 @@ writing_task = Task(
 
 # ── Orchestration ────────────────────────────────────────────────────────────
 
-def _build_mcp_server_params():
-    """Build MCPServerAdapter params for the RAG/web MCP server."""
-    server_script = str(Path(__file__).parent / "rag_mcp_server.py")
-    return {"command": "python", "args": [server_script]}
-
-
 def generate_podcast_script(topic: str, duration_minutes: int = 5) -> str:
-    research_agents = [historian, technologist, futurist]
-
-    if _mcp_needed:
-        server_params = _build_mcp_server_params()
-        with MCPServerAdapter(server_params) as mcp_tools:
-            logger.info("MCP server started — tools: %s", [t.name for t in mcp_tools])
-            for agent in research_agents:
-                agent.tools = mcp_tools
-            return _run_crew(topic, duration_minutes)
-    else:
-        for agent in research_agents:
-            agent.tools = []
-        return _run_crew(topic, duration_minutes)
+    for agent in [historian, technologist, futurist]:
+        agent.tools = _research_tools
+    return _run_crew(topic, duration_minutes)
 
 
 def _run_crew(topic: str, duration_minutes: int) -> str:
@@ -338,10 +313,7 @@ def _run_crew(topic: str, duration_minutes: int) -> str:
     else:
         script_json = str(result)
 
-<<<<<<< Updated upstream
     # Save timestamped script to output/
-=======
->>>>>>> Stashed changes
     output_dir = Path(__file__).parent / "output"
     output_dir.mkdir(exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

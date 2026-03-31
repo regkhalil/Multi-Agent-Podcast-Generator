@@ -1,17 +1,22 @@
 """
-MCP server exposing RAG (knowledge base search) and web search tools.
+Native CrewAI tools for RAG (knowledge-base search) and web search.
 
-Run standalone:  python rag_mcp_server.py
-The orchestrator launches this automatically as a subprocess via stdio.
+Usage in orchestrator:
+    from research_tools import get_research_tools
+    tools = get_research_tools()          # list[Tool], may be empty
+    for agent in research_agents:
+        agent.tools = tools
 """
 
-import json
 import logging
-import sys
+import os
 import tomllib
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from crewai.tools import tool
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -25,9 +30,6 @@ with open(_config_path, "rb") as f:
 _rag_cfg = _config.get("rag", {})
 _web_cfg = _config.get("web_search", {})
 
-RAG_ENABLED = _rag_cfg.get("enabled", False)
-WEB_ENABLED = _web_cfg.get("enabled", False)
-
 # ── RAG setup (lazy — only if enabled) ───────────────────────────────────────
 
 _collection = None
@@ -38,20 +40,73 @@ def _init_rag():
     global _collection
 
     import chromadb
-    from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
     from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     knowledge_dir = Path(__file__).parent / _rag_cfg.get("knowledge_dir", "knowledge")
     chunk_size = _rag_cfg.get("chunk_size", 1000)
     chunk_overlap = _rag_cfg.get("chunk_overlap", 200)
     embedding_model = _rag_cfg.get("embedding_model", "nomic-embed-text")
-    ollama_url = _config["ollama"]["base_url"]
+
+    # Resolve embedding provider: explicit [rag] setting > [llm].provider > "ollama"
+    embedding_provider = _rag_cfg.get(
+        "embedding_provider",
+        _config.get("llm", {}).get("provider", "ollama"),
+    )
 
     client = chromadb.Client()
-    embed_fn = OllamaEmbeddingFunction(
-        model_name=embedding_model,
-        url=f"{ollama_url}/api/embed",
-    )
+
+    if embedding_provider == "gemini":
+        from chromadb import EmbeddingFunction, Documents, Embeddings
+        import requests as _requests
+
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        if not api_key:
+            raise RuntimeError(
+                "GEMINI_API_KEY is required for Gemini embeddings. "
+                "Set it in .env or your environment."
+            )
+        _model = embedding_model or "models/gemini-embedding-001"
+
+        class _GeminiEmbedding(EmbeddingFunction):
+            def __call__(self, input: Documents) -> Embeddings:
+                import time
+                # Use batch endpoint to reduce API calls
+                url = f"https://generativelanguage.googleapis.com/v1beta/{_model}:batchEmbedContents?key={api_key}"
+                # Process in batches of 100 (API limit)
+                all_embeddings = []
+                for i in range(0, len(input), 100):
+                    batch = input[i:i + 100]
+                    requests_body = [
+                        {"model": _model, "content": {"parts": [{"text": text}]}}
+                        for text in batch
+                    ]
+                    for attempt in range(5):
+                        resp = _requests.post(url, json={"requests": requests_body})
+                        if resp.status_code == 429:
+                            wait = 2 ** attempt
+                            logger.warning("Rate limited, waiting %ds...", wait)
+                            time.sleep(wait)
+                            continue
+                        resp.raise_for_status()
+                        break
+                    else:
+                        resp.raise_for_status()
+                    for emb in resp.json()["embeddings"]:
+                        all_embeddings.append(emb["values"])
+                return all_embeddings
+
+        embed_fn = _GeminiEmbedding()
+        logger.info("Using Gemini embeddings (model=%s)", _model)
+    else:
+        from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
+
+        ollama_url = _config.get("ollama", {}).get("base_url", "http://localhost:11434")
+        embed_fn = OllamaEmbeddingFunction(
+            model_name=embedding_model or "nomic-embed-text",
+            url=f"{ollama_url}/api/embed",
+        )
+        logger.info("Using Ollama embeddings (model=%s, url=%s)", embedding_model, ollama_url)
+
     _collection = client.get_or_create_collection(
         name="podcast_knowledge", embedding_function=embed_fn,
     )
@@ -96,12 +151,9 @@ def _read_file(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
 
-# ── MCP server ───────────────────────────────────────────────────────────────
+# ── CrewAI tools ─────────────────────────────────────────────────────────────
 
-mcp = FastMCP("podcast-research")
-
-
-@mcp.tool(enabled=RAG_ENABLED)
+@tool("search_knowledge_base")
 def search_knowledge_base(query: str) -> str:
     """Search uploaded documents for information relevant to the query.
     Returns passages from the knowledge base that are highly relevant,
@@ -124,8 +176,6 @@ def search_knowledge_base(query: str) -> str:
     for doc, meta, dist in zip(
         results["documents"][0], results["metadatas"][0], results["distances"][0],
     ):
-        # ChromaDB returns L2 distance by default; lower = more similar.
-        # Convert to a 0-1 similarity score (approximate).
         similarity = max(0.0, 1.0 - dist / 2.0)
         if similarity >= threshold:
             passages.append(f"[Source: {meta.get('source', '?')}] (score: {similarity:.2f})\n{doc}")
@@ -136,7 +186,7 @@ def search_knowledge_base(query: str) -> str:
     return "\n\n---\n\n".join(passages)
 
 
-@mcp.tool(enabled=WEB_ENABLED)
+@tool("search_web")
 def search_web(query: str) -> str:
     """Search the web for current information about the query.
     Returns snippets from top web results. Always also use your own
@@ -166,13 +216,22 @@ def search_web(query: str) -> str:
 
     except Exception as e:
         logger.error("Web search failed: %s", e)
-        return f"Web search failed. Rely on your own expertise."
+        return "Web search failed. Rely on your own expertise."
 
 
-# ── Entry point ──────────────────────────────────────────────────────────────
+# ── Public API ───────────────────────────────────────────────────────────────
 
-if __name__ == "__main__":
-    if RAG_ENABLED:
+def get_research_tools() -> list:
+    """Return the list of enabled research tools (may be empty)."""
+    tools = []
+
+    if _rag_cfg.get("enabled", False):
         _init_rag()
-    logger.info("MCP server starting (rag=%s, web=%s)", RAG_ENABLED, WEB_ENABLED)
-    mcp.run(transport="stdio")
+        tools.append(search_knowledge_base)
+        logger.info("RAG tool enabled")
+
+    if _web_cfg.get("enabled", False):
+        tools.append(search_web)
+        logger.info("Web search tool enabled")
+
+    return tools
