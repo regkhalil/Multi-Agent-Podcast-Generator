@@ -1,0 +1,2 @@
+Place PDF, TXT, or MD files here for RAG-powered research.
+These documents will be chunked and indexed when the pipeline runs.

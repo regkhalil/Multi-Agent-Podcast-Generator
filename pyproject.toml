@@ -5,13 +5,22 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+<<<<<<< Updated upstream
     "crewai[google-genai]>=1.12.2",
+=======
+    "chromadb>=1.0.0",
+    "crewai>=1.12.2",
+>>>>>>> Stashed changes
     "edge-tts>=7.0.0",
     "google-generativeai>=0.8.6",
     "langchain-ollama>=1.0.1",
     "langchain-openai>=1.1.12",
+    "langchain-text-splitters>=0.3.0",
+    "mcp>=1.0.0",
     "pydub>=0.25.1",
+    "pypdf>=5.0.0",
     "python-dotenv>=1.1.1",
     "static-ffmpeg>=3.0",
     "streamlit>=1.55.0",
+    "tavily-python>=0.5.0",
 ]
