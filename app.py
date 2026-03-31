@@ -20,12 +20,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 
 # Pipeline steps shown in the progress tracker
 PIPELINE_STEPS = [
-    "🔍 Prompt Expansion",
-    "📖 Historical Research",
-    "⚙️ Technical Research",
-    "🚀 Future Trends Research",
-    "📝 Script Writing",
-    "🎧 Audio Synthesis",
+    "Prompt Expansion",
+    "Historical Research",
+    "Technical Research",
+    "Future Trends Research",
+    "Script Writing",
+    "Audio Synthesis",
 ]
 
 # Keywords for detecting which step is active from logs
