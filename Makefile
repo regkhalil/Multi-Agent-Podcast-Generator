@@ -29,7 +29,12 @@ audio:
 	fi; \
 	uv run python audio_pipeline.py "$$LATEST_SCRIPT"
 
-app: setup
+app:
+ifeq ($(PROVIDER),gemini)
 	uv run streamlit run app.py
+else
+	$(MAKE) setup
+	uv run streamlit run app.py
+endif
 
 all: run audio

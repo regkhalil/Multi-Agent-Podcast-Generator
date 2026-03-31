@@ -217,6 +217,19 @@ def main() -> None:
             st.rerun()
 
         st.divider()
+        # Display the active LLM provider from config
+        try:
+            import tomllib
+            with open(Path(__file__).parent / "config.toml", "rb") as _f:
+                _cfg = tomllib.load(_f)
+            _provider = _cfg.get("llm", {}).get("provider", "ollama")
+            if _provider == "gemini":
+                _model = _cfg["gemini"]["model"]
+            else:
+                _model = _cfg["ollama"]["model"]
+            st.caption(f"Provider: {_provider} | Model: {_model}")
+        except Exception:
+            pass
         st.caption("Agents: Prompt Expander, Historian, Technologist, Futurist, Scriptwriter")
 
     # Title
