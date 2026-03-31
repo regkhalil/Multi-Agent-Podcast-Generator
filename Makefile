@@ -1,4 +1,4 @@
-.PHONY: setup run audio all
+.PHONY: setup run audio all app
 
 MODEL := $(shell python3 -c "import tomllib; print(tomllib.load(open('config.toml','rb'))['ollama']['model'])" 2>/dev/null || echo llama3)
 
@@ -14,5 +14,8 @@ run: setup
 
 audio:
 	uv run python audio_pipeline.py output/script.json
+
+app: setup
+	uv run streamlit run app.py
 
 all: run audio
