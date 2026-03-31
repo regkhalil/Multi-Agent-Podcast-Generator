@@ -12,5 +12,6 @@ dependencies = [
     "langchain-openai>=1.1.12",
     "pydub>=0.25.1",
     "python-dotenv>=1.1.1",
+    "static-ffmpeg>=3.0",
     "streamlit>=1.55.0",
 ]

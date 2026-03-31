@@ -5,7 +5,10 @@ import tomllib
 from pathlib import Path
 
 import edge_tts
+import static_ffmpeg
 from pydub import AudioSegment
+
+static_ffmpeg.add_paths()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
