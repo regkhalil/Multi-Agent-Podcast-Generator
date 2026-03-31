@@ -13,5 +13,5 @@ temperature = 0.7
 # API key is read from GEMINI_API_KEY environment variable (set in .env)
 
 [tts]
-voice_ali = "en-US-GuyNeural"
+voice_ali = "en-GB-RyanNeural"
 voice_amir = "en-US-AndrewNeural"
